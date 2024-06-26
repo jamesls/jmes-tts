@@ -1,4 +1,5 @@
 """Performs text to speech using Amazon Polly."""
+
 import time
 import logging
 
@@ -10,7 +11,13 @@ LOG = logging.getLogger(__name__)
 
 def convert_to_audio(contents: str):
     client = boto3.client('polly')
-    response = client.synthesize_speech(Text=contents, OutputFormat='mp3', VoiceId='Matthew', Engine='generative', LanguageCode='en-US')
+    response = client.synthesize_speech(
+        Text=contents,
+        OutputFormat='mp3',
+        VoiceId='Matthew',
+        Engine='generative',
+        LanguageCode='en-US',
+    )
     num_chars = response['RequestCharacters']
     stream = response['AudioStream']
     print(f"Total request chars: {num_chars}")
@@ -29,14 +36,18 @@ def count_chars(contents: str):
 
 class TextToSpeech:
     """Converts text to speech using Amazon Polly."""
-    # The docs say the cutoff is 3000, we add a buffer to be safe.
 
-    #SYNC_SIZE_CUTOFF = 2900
-    SYNC_SIZE_CUTOFF = 5
+    # The docs say the cutoff is 3000, we add a buffer to be safe.
+    SYNC_SIZE_CUTOFF = 2900
     DELAY = 5
 
-    def __init__(self, bucket: str, session=None, voice: str = 'Matthew',
-                 engine: str = 'generative') -> None:
+    def __init__(
+        self,
+        bucket: str,
+        session=None,
+        voice: str = 'Matthew',
+        engine: str = 'generative',
+    ) -> None:
         if session is None:
             session = boto3.Session()
         self.session = session
@@ -56,7 +67,6 @@ class TextToSpeech:
         This supports long form text using the async speech
         synthesis task if needed.
         """
-        breakpoint()
         num_chars = count_chars(contents)
         if num_chars < self.SYNC_SIZE_CUTOFF:
             return self._convert_sync(contents)
@@ -69,7 +79,7 @@ class TextToSpeech:
             OutputFormat='mp3',
             VoiceId=self.voice,
             Engine=self.engine,
-            LanguageCode='en-US'
+            LanguageCode='en-US',
         )
         self.last_request_chars = response['RequestCharacters']
         return response['AudioStream']
@@ -85,7 +95,7 @@ class TextToSpeech:
             OutputFormat='mp3',
             OutputS3BucketName=self.bucket,
             Text=contents,
-            VoiceId=self.voice
+            VoiceId=self.voice,
         )
         task_id = response['SynthesisTask']['TaskId']
         while True:
@@ -94,7 +104,8 @@ class TextToSpeech:
             status = result['SynthesisTask']['TaskStatus']
             if status == 'failed':
                 raise RuntimeError(
-                    f"TTS task failed, task_id={task_id}\n{result}")
+                    f"TTS task failed, task_id={task_id}\n{result}"
+                )
             elif status == 'completed':
                 output_uri = result['SynthesisTask']['OutputUri']
                 # The output uri is formatted as an https URL:
@@ -102,7 +113,9 @@ class TextToSpeech:
                 # So parse out the bucket and key.
                 key = '/'.join(output_uri.split('/')[4:])
                 stream = self._get_s3_download_stream(key)
-                self.last_request_chars = result['SynthesisTask']['RequestCharacters']
+                self.last_request_chars = result['SynthesisTask'][
+                    'RequestCharacters'
+                ]
                 return stream
             time.sleep(self.DELAY)
 

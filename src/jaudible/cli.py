@@ -3,7 +3,6 @@ import sys
 
 import boto3
 
-from jaudible.tts import convert_to_audio, count_chars
 from jaudible.tts import TextToSpeech
 
 app = typer.Typer()
