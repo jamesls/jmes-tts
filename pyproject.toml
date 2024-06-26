@@ -1,0 +1,110 @@
+[tool.poetry]
+name = "jaudible"
+version = "0.0.1"
+description = "Generate audio books from text documents"
+authors = [
+    "James Saryerwinnie <js@jamesls.com>",
+]
+license = "Apache-2.0"
+readme = "README.md"
+
+documentation = "https://jamesls.github.io/jaudible"
+homepage = "https://jamesls.github.io/jaudible"
+repository = "https://github.com/jamesls/jaudible"
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+]
+
+packages = [
+    { include = "jaudible", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8.9, <3.12"
+typer = "^0.12.3"
+boto3 = "^1.34.133"
+botocore-stubs = "^1.34.132"
+boto3-stubs = {extras = ["polly", "s3"], version = "^1.34.133"}
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "*"
+pytest = "*"
+pytest-cov = "*"
+mkdocstrings = "*"
+mkdocs-material = "*"
+pymdown-extensions = "*"
+pytest-github-actions-annotate-failures = "*"
+jmeslog = "*"
+poethepoet = "*"
+ruff = "*"
+pyright = "*"
+pygments = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]
+quote-style = "preserve"
+preview = true
+
+[tool.pytest.ini_options]
+addopts = """\
+    --cov jaudible \
+    --cov-report term-missing \
+    --no-cov-on-fail \
+"""
+
+[tool.coverage.run]
+branch = true
+source = ["src/"]
+
+[tool.coverage.report]
+fail_under = 100
+exclude_lines = [
+    'if TYPE_CHECKING:',
+    'pragma: no cover',
+    'raise NotImplementedError',
+]
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/__pycache__"]
+
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+pythonVersion = "3.11"
+pythonPlatform = "All"
+
+[tool.poe.tasks]
+pre-commit = "poetry run pre-commit run --all-files"
+check = [
+{ cmd = "poetry run ruff check ." },
+{ cmd = "poetry run ruff format --diff ." },
+{ cmd = "poetry run pyright" },
+]
+test = "poetry run pytest tests/"
+stage-release = "python3 ./scripts/stage-release --output staged-release.zip"
+format-code = [
+  { cmd = "poetry run ruff format ." },
+]
+prcheck = ["check", "test", "pre-commit"]
+
+# Create a jmes-tts CLI command
+[tool.poetry.scripts]
+jmes-tts = "jaudible.cli:app"

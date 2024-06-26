@@ -1,0 +1,21 @@
+{
+  "template": "https://github.com/jamesls/jmes-cookiecutter-python-package",
+  "commit": "2fb8eb20593425bf5cca321df8618ce79a7cce3b",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "James Saryerwinnie",
+      "email": "js@jamesls.com",
+      "github_username": "jamesls",
+      "project_name": "jaudible",
+      "project_slug": "jaudible",
+      "package_name": "jaudible",
+      "project_short_description": "Generate audio books from text documents",
+      "pypi_username": "jamesls",
+      "year": "2024",
+      "version": "0.0.1",
+      "_template": "https://github.com/jamesls/jmes-cookiecutter-python-package"
+    }
+  },
+  "directory": null
+}
