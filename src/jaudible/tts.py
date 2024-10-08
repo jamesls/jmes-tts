@@ -4,7 +4,10 @@ import time
 import logging
 
 import boto3
+from botocore.response import StreamingBody
 from mypy_boto3_polly.literals import VoiceIdType, EngineType
+from mypy_boto3_polly.client import PollyClient
+from mypy_boto3_s3.client import S3Client
 
 
 LOG = logging.getLogger(__name__)
@@ -35,43 +38,29 @@ def count_chars(contents: str):
     return len(contents.strip())
 
 
-class TextToSpeech:
-    """Converts text to speech using Amazon Polly."""
+class BaseTextToSpeech:
+    def convert_to_speech(self, contents: str) -> StreamingBody:
+        raise NotImplementedError("convert_to_speec")
 
-    # The docs say the cutoff is 3000, we add a buffer to be safe.
-    SYNC_SIZE_CUTOFF = 2900
-    DELAY = 5
+
+class TextToSpeech(BaseTextToSpeech):
+    """Converts text to speech using Amazon Polly."""
 
     def __init__(
         self,
-        bucket: str,
-        session: boto3.Session | None = None,
+        polly_client: PollyClient | None = None,
         voice: VoiceIdType = 'Matthew',
         engine: EngineType = 'generative',
     ) -> None:
-        if session is None:
-            session = boto3.Session()
-        self.session = session
-        self._polly = self.session.client('polly')
-        self._s3 = self.session.client('s3')
-        self.bucket = bucket
+        if polly_client is None:
+            polly_client = boto3.client('polly')
+        self._polly = polly_client
         self.voice: VoiceIdType = voice
         self.engine: EngineType = engine
         self.last_request_chars = 0
 
-    def convert_to_speech(self, contents: str):
-        """Converts text to speech.
-
-        This supports long form text using the async speech
-        synthesis task if needed.
-        """
-        num_chars = count_chars(contents)
-        if num_chars < self.SYNC_SIZE_CUTOFF:
-            return self._convert_sync(contents)
-        else:
-            return self._convert_async(contents)
-
-    def _convert_sync(self, contents: str):
+    def convert_to_speech(self, contents: str) -> StreamingBody:
+        """Converts text to speech."""
         response = self._polly.synthesize_speech(
             Text=contents,
             OutputFormat='mp3',
@@ -82,7 +71,45 @@ class TextToSpeech:
         self.last_request_chars = response['RequestCharacters']
         return response['AudioStream']
 
-    def _convert_async(self, contents: str):
+
+class LongFormTextToSpeech(BaseTextToSpeech):
+    """Converts long form text to speech using Amazon Polly.
+
+    When the text content is over a given size (currently 3000 chars for
+    standard voice), you need to use this class to generate audio.
+
+    This has a larger max character size from 100k to 200k, depending
+    on the engine used.
+
+    This class requires an async workflow where a job is started and then
+    results are uploaded to an S3 bucket.  This class abstracts all those
+    details to still provide a blocking API that will automatically
+    download the results from S3 when complete, so you have a similar
+    API to the sync version of this class.
+    """
+
+    DELAY = 5
+
+    def __init__(
+        self,
+        bucket: str,
+        polly_client: PollyClient | None = None,
+        s3_client: S3Client | None = None,
+        voice: VoiceIdType = 'Matthew',
+        engine: EngineType = 'generative',
+    ) -> None:
+        if polly_client is None:
+            polly_client = boto3.client('polly')
+        if s3_client is None:
+            s3_client = boto3.client('s3')
+        self._polly = polly_client
+        self._s3 = s3_client
+        self.bucket = bucket
+        self.voice: VoiceIdType = voice
+        self.engine: EngineType = engine
+        self.last_request_chars = 0
+
+    def convert_to_speech(self, contents: str) -> StreamingBody:
         if not self.bucket:
             raise RuntimeError(
                 "The `bucket` parameter is required for large text"
