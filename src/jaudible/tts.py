@@ -4,6 +4,7 @@ import time
 import logging
 
 import boto3
+from mypy_boto3_polly.literals import VoiceIdType, EngineType
 
 
 LOG = logging.getLogger(__name__)
@@ -44,9 +45,9 @@ class TextToSpeech:
     def __init__(
         self,
         bucket: str,
-        session=None,
-        voice: str = 'Matthew',
-        engine: str = 'generative',
+        session: boto3.Session | None = None,
+        voice: VoiceIdType = 'Matthew',
+        engine: EngineType = 'generative',
     ) -> None:
         if session is None:
             session = boto3.Session()
@@ -54,11 +55,8 @@ class TextToSpeech:
         self._polly = self.session.client('polly')
         self._s3 = self.session.client('s3')
         self.bucket = bucket
-        self.voice = voice
-        # engine is of type `str`, but we assert the type here so
-        # self.engine is of type Literal['generative', 'long-form', 'neural', 'standard'].
-        assert engine in ('generative', 'long-form', 'neural', 'standard')
-        self.engine = engine
+        self.voice: VoiceIdType = voice
+        self.engine: EngineType = engine
         self.last_request_chars = 0
 
     def convert_to_speech(self, contents: str):

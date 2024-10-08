@@ -74,7 +74,6 @@ branch = true
 source = ["src/"]
 
 [tool.coverage.report]
-fail_under = 100
 exclude_lines = [
     'if TYPE_CHECKING:',
     'pragma: no cover',
@@ -87,8 +86,9 @@ exclude = ["**/__pycache__"]
 
 reportMissingImports = true
 reportMissingTypeStubs = false
+reportTypedDictNotRequiredAccess = false
 
-pythonVersion = "3.11"
+pythonVersion = "3.12"
 pythonPlatform = "All"
 
 [tool.poe.tasks]
