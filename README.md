@@ -22,7 +22,7 @@ pip install jaudible
 
 ## Development
 
-This project requires at Python 3.9+ and uses
+This project requires at Python 3.12 and uses
 [Poetry](https://python-poetry.org/) to manage dependencies.
 
 Once you've created and activated your virtual environment, run:
@@ -54,3 +54,37 @@ Before submitting a PR, ensure the `prcheck` task runs successfully:
 ```sh
 poe prcheck
 ```
+
+## Usage
+
+The `jmes-tts` command is the main interface for converting text to speech. It offers several options to customize the conversion process.
+
+### Basic Usage
+
+```sh
+jmes-tts --text "Hello, world!" --output hello.mp3
+```
+
+This will convert the text "Hello, world!" to speech and save it as "hello.mp3".
+
+### Command Options
+
+- `--filename`: Input file to convert to speech
+- `--text`: Text to convert to speech
+- `--bucket`: S3 bucket for long-form text (optional)
+- `--output`: Output audio file (default: output.mp3)
+
+### Converting a File
+
+For longer texts, you can specify an S3 bucket and the path to a local file:
+
+```sh
+jmes-tts --filename long_text.txt --bucket my-s3-bucket --output long_audio.mp3
+```
+
+### Notes
+
+- You must provide either `--filename` or `--text`, but not both.
+- If you provide `--filename` you must also provide `--bucket`.
+- If no output file is specified, the audio will be saved as
+  `output.mp3` in the current directory.

@@ -26,6 +26,12 @@ def tts(
         contents = text
         tts = TextToSpeech()
     else:
+        if bucket is None:
+            typer.echo(
+                "Error: --bucket must be provided when using --filename",
+                err=True,
+            )
+            raise typer.Exit(code=1)
         print(f"Converting {filename} to speech")
         with open(filename) as f:
             contents = f.read()
