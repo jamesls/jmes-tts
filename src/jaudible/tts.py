@@ -13,21 +13,6 @@ from mypy_boto3_s3.client import S3Client
 LOG = logging.getLogger(__name__)
 
 
-def convert_to_audio(contents: str):
-    client = boto3.client('polly')
-    response = client.synthesize_speech(
-        Text=contents,
-        OutputFormat='mp3',
-        VoiceId='Matthew',
-        Engine='generative',
-        LanguageCode='en-US',
-    )
-    num_chars = response['RequestCharacters']
-    stream = response['AudioStream']
-    print(f"Total request chars: {num_chars}")
-    return stream
-
-
 def count_chars(contents: str):
     """Count number of characters billed by Polly.
 
@@ -110,10 +95,6 @@ class LongFormTextToSpeech(BaseTextToSpeech):
         self.last_request_chars = 0
 
     def convert_to_speech(self, contents: str) -> StreamingBody:
-        if not self.bucket:
-            raise RuntimeError(
-                "The `bucket` parameter is required for large text"
-            )
         response = self._polly.start_speech_synthesis_task(
             Engine=self.engine,
             LanguageCode='en-US',
