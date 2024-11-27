@@ -2,12 +2,15 @@
 
 import time
 import logging
+from typing import Any, Optional
 
 import boto3
 from botocore.response import StreamingBody
-from mypy_boto3_polly.literals import VoiceIdType, EngineType
+from mypy_boto3_polly.literals import VoiceIdType, EngineType, LanguageCodeType
 from mypy_boto3_polly.client import PollyClient
 from mypy_boto3_s3.client import S3Client
+
+from jaudible.voices import LANGUAGES
 
 
 LOG = logging.getLogger(__name__)
@@ -23,7 +26,32 @@ def count_chars(contents: str):
     return len(contents.strip())
 
 
+def create_tts_client(
+    contents: Optional[str] = None,
+    filename: Optional[str] = None,
+    bucket: Optional[str] = None,
+    language: str = 'en',
+) -> 'BaseTextToSpeech':
+    if language not in LANGUAGES:
+        raise ValueError(f"Invalid language: {language}")
+    if contents is None and filename is None:
+        raise ValueError("Either contents or filename must be provided")
+    if filename is not None and bucket is None:
+        raise ValueError("bucket must be provided when using filename")
+    params = LANGUAGES[language]
+    kwargs: dict[str, Any] = {**params}
+    if filename is not None:
+        assert bucket is not None
+        kwargs['bucket'] = bucket
+        cls = LongFormTextToSpeech
+    else:
+        cls = TextToSpeech
+    return cls(**kwargs)
+
+
 class BaseTextToSpeech:
+    last_request_chars: int = 0
+
     def convert_to_speech(self, contents: str) -> StreamingBody:
         raise NotImplementedError("convert_to_speec")
 
@@ -36,12 +64,14 @@ class TextToSpeech(BaseTextToSpeech):
         polly_client: PollyClient | None = None,
         voice: VoiceIdType = 'Matthew',
         engine: EngineType = 'generative',
+        language_code: LanguageCodeType = 'en-US',
     ) -> None:
         if polly_client is None:
             polly_client = boto3.client('polly')
         self._polly = polly_client
         self.voice: VoiceIdType = voice
         self.engine: EngineType = engine
+        self.language_code: LanguageCodeType = language_code
         self.last_request_chars = 0
 
     def convert_to_speech(self, contents: str) -> StreamingBody:
@@ -51,7 +81,7 @@ class TextToSpeech(BaseTextToSpeech):
             OutputFormat='mp3',
             VoiceId=self.voice,
             Engine=self.engine,
-            LanguageCode='en-US',
+            LanguageCode=self.language_code,
         )
         self.last_request_chars = response['RequestCharacters']
         return response['AudioStream']
@@ -82,6 +112,7 @@ class LongFormTextToSpeech(BaseTextToSpeech):
         s3_client: S3Client | None = None,
         voice: VoiceIdType = 'Matthew',
         engine: EngineType = 'generative',
+        language_code: LanguageCodeType = 'en-US',
     ) -> None:
         if polly_client is None:
             polly_client = boto3.client('polly')
@@ -92,12 +123,13 @@ class LongFormTextToSpeech(BaseTextToSpeech):
         self.bucket = bucket
         self.voice: VoiceIdType = voice
         self.engine: EngineType = engine
+        self.language_code: LanguageCodeType = language_code
         self.last_request_chars = 0
 
     def convert_to_speech(self, contents: str) -> StreamingBody:
         response = self._polly.start_speech_synthesis_task(
             Engine=self.engine,
-            LanguageCode='en-US',
+            LanguageCode=self.language_code,
             OutputFormat='mp3',
             OutputS3BucketName=self.bucket,
             Text=contents,

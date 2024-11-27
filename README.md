@@ -23,12 +23,12 @@ pip install jaudible
 ## Development
 
 This project requires at Python 3.12 and uses
-[Poetry](https://python-poetry.org/) to manage dependencies.
+[uv](https://docs.astral.sh/uv/) to manage dependencies.
 
 Once you've created and activated your virtual environment, run:
 
 ```sh
-poetry install
+uv sync
 ```
 
 This will install all necessary dependencies and install this project
@@ -73,6 +73,9 @@ This will convert the text "Hello, world!" to speech and save it as "hello.mp3".
 - `--text`: Text to convert to speech
 - `--bucket`: S3 bucket for long-form text (optional)
 - `--output`: Output audio file (default: output.mp3)
+- `--language`: Language of phrase (default: en)
+
+For languages you can specify `en` for English (the default), `fr` for French, and `es` for Spanish.
 
 ### Converting a File
 

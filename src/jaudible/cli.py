@@ -1,7 +1,7 @@
 import typer
 import sys
 
-from jaudible.tts import TextToSpeech, LongFormTextToSpeech
+from jaudible.tts import create_tts_client
 
 app = typer.Typer()
 
@@ -12,6 +12,7 @@ def tts(
     text: str = typer.Option(None, help="Text to convert to speech"),
     bucket: str = typer.Option('', help="S3 bucket for long-form text"),
     output: str = typer.Option('output.mp3', help="Output audio file"),
+    language: str = typer.Option('en', help="Language of phrase"),
 ):
     sys.excepthook = sys.__excepthook__
 
@@ -21,22 +22,14 @@ def tts(
         )
         raise typer.Exit(code=1)
 
-    if text is not None:
-        print("Converting provided text to speech")
-        contents = text
-        tts = TextToSpeech()
-    else:
-        if bucket is None:
-            typer.echo(
-                "Error: --bucket must be provided when using --filename",
-                err=True,
-            )
-            raise typer.Exit(code=1)
-        print(f"Converting {filename} to speech")
+    tts = create_tts_client(
+        contents=text, filename=filename, bucket=bucket, language=language
+    )
+    if filename is not None:
         with open(filename) as f:
             contents = f.read()
-        tts = LongFormTextToSpeech(bucket=bucket)
-
+    else:
+        contents = text
     stream = tts.convert_to_speech(contents)
     print(f"Num chars used: {tts.last_request_chars}")
     with open(output, 'wb') as f:
