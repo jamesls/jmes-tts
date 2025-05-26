@@ -89,7 +89,6 @@ pythonVersion = "3.12"
 pythonPlatform = "All"
 
 [tool.poe.tasks]
-pre-commit = "poetry run pre-commit run --all-files"
 check = [
 { cmd = "uv run ruff check ." },
 { cmd = "uv run ruff format --diff ." },
@@ -105,7 +104,7 @@ auto-check = [
 format-code = [
   { cmd = "uv run ruff format ." },
 ]
-prcheck = ["check", "test", "pre-commit"]
+prcheck = ["check", "test"]
 
 # Create a jmes-tts CLI command
 [project.scripts]
