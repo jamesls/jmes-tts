@@ -57,7 +57,8 @@ poe prcheck
 
 ## Usage
 
-The `jmes-tts` command is the main interface for converting text to speech. It offers several options to customize the conversion process.
+The `jmes-tts` command is the main interface for converting text to speech.
+It offers several options to customize the conversion process.
 
 ### Basic Usage
 
@@ -75,7 +76,8 @@ This will convert the text "Hello, world!" to speech and save it as "hello.mp3".
 - `--output`: Output audio file (default: output.mp3)
 - `--language`: Language of phrase (default: en)
 
-For languages you can specify `en` for English (the default), `fr` for French, and `es` for Spanish.
+For languages you can specify `en` for English (the default), `fr` for French,
+and `es` for Spanish.
 
 ### Converting a File
 
@@ -88,6 +90,7 @@ jmes-tts --filename long_text.txt --bucket my-s3-bucket --output long_audio.mp3
 ### Notes
 
 - You must provide either `--filename` or `--text`, but not both.
-- If you provide `--filename` you must also provide `--bucket`.
+- If your text is larger than 3000 (billable) characters, you need to provide
+  the `--bucket` argument.  Otherwise synchronous TTS will be used.
 - If no output file is specified, the audio will be saved as
   `output.mp3` in the current directory.

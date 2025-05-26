@@ -97,6 +97,11 @@ check = [
 ]
 test = "uv run pytest tests/"
 stage-release = "python3 ./scripts/stage-release --output staged-release.zip"
+auto-check = [
+  { cmd = "uv run ruff check --fix ." },
+  { cmd = "uv run ruff format ." },
+  { cmd = "uv run pyright" },
+]
 format-code = [
   { cmd = "uv run ruff format ." },
 ]

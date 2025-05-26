@@ -10,7 +10,7 @@ app = typer.Typer()
 def tts(
     filename: str = typer.Option(None, help="Input file to convert to speech"),
     text: str = typer.Option(None, help="Text to convert to speech"),
-    bucket: str = typer.Option('', help="S3 bucket for long-form text"),
+    bucket: str = typer.Option(None, help="S3 bucket for long-form text"),
     output: str = typer.Option('output.mp3', help="Output audio file"),
     language: str = typer.Option('en', help="Language of phrase"),
 ):

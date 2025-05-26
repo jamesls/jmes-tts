@@ -36,14 +36,11 @@ def create_tts_client(
         raise ValueError(f"Invalid language: {language}")
     if contents is None and filename is None:
         raise ValueError("Either contents or filename must be provided")
-    if filename is not None and bucket is None:
-        raise ValueError("bucket must be provided when using filename")
     params = LANGUAGES[language]
     kwargs: dict[str, Any] = {**params}
-    if filename is not None:
-        assert bucket is not None
-        kwargs['bucket'] = bucket
+    if bucket is not None:
         cls = LongFormTextToSpeech
+        kwargs['bucket'] = bucket
     else:
         cls = TextToSpeech
     return cls(**kwargs)
@@ -53,7 +50,7 @@ class BaseTextToSpeech:
     last_request_chars: int = 0
 
     def convert_to_speech(self, contents: str) -> StreamingBody:
-        raise NotImplementedError("convert_to_speec")
+        raise NotImplementedError("convert_to_speech")
 
 
 class TextToSpeech(BaseTextToSpeech):
