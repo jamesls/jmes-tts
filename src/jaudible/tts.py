@@ -11,6 +11,7 @@ from mypy_boto3_polly.client import PollyClient
 from mypy_boto3_s3.client import S3Client
 
 from jaudible.voices import LANGUAGES
+from jaudible.pricing import PRICES
 
 
 LOG = logging.getLogger(__name__)
@@ -48,9 +49,16 @@ def create_tts_client(
 
 class BaseTextToSpeech:
     last_request_chars: int = 0
+    engine: EngineType
 
     def convert_to_speech(self, contents: str) -> StreamingBody:
         raise NotImplementedError("convert_to_speech")
+
+    @property
+    def last_cost(self) -> float:
+        if self.engine not in PRICES:
+            return 0.0
+        return PRICES[self.engine] * self.last_request_chars / 1_000_000
 
 
 class TextToSpeech(BaseTextToSpeech):

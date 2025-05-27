@@ -32,8 +32,10 @@ def tts(
         contents = text
     stream = tts.convert_to_speech(contents)
     print(f"Num chars used: {tts.last_request_chars}")
+    print(f"Total cost: ${tts.last_cost:.6f} USD")
     with open(output, 'wb') as f:
         f.write(stream.read())
+    print(f"Output written to {output}")
 
 
 if __name__ == "__main__":
