@@ -94,7 +94,10 @@ def test_long_form_tts_convert_to_speech(polly_client_stub, s3_client_stub):
         'SynthesisTask': {
             'TaskId': 'test-task-id',
             'TaskStatus': 'inProgress',
-            'OutputUri': f"https://s3.us-east-1.amazonaws.com/{bucket_name}/path/to/output.mp3",
+            'OutputUri': (
+                f"https://s3.us-east-1.amazonaws.com/{bucket_name}/"
+                "path/to/output.mp3"
+            ),
             'RequestCharacters': len(test_text),
         }
     }
@@ -115,7 +118,10 @@ def test_long_form_tts_convert_to_speech(polly_client_stub, s3_client_stub):
         'SynthesisTask': {
             'TaskId': 'test-task-id',
             'TaskStatus': 'inProgress',
-            'OutputUri': f"https://s3.us-east-1.amazonaws.com/{bucket_name}/path/to/output.mp3",
+            'OutputUri': (
+                f"https://s3.us-east-1.amazonaws.com/{bucket_name}"
+                "/path/to/output.mp3"
+            ),
             'RequestCharacters': len(test_text),
         }
     }
@@ -124,7 +130,10 @@ def test_long_form_tts_convert_to_speech(polly_client_stub, s3_client_stub):
         'SynthesisTask': {
             'TaskId': 'test-task-id',
             'TaskStatus': 'completed',
-            'OutputUri': f"https://s3.us-east-1.amazonaws.com/{bucket_name}/path/to/output.mp3",
+            'OutputUri': (
+                f"https://s3.us-east-1.amazonaws.com/{bucket_name}"
+                "/path/to/output.mp3"
+            ),
             'RequestCharacters': len(test_text),
         }
     }
@@ -167,16 +176,17 @@ def test_long_form_tts_convert_to_speech(polly_client_stub, s3_client_stub):
 
 def test_long_form_tts_task_failure(polly_client_stub, s3_client_stub):
     polly_client, polly_stubber = polly_client_stub
-    s3_client, s3_stubber = s3_client_stub
+    s3_client, _ = s3_client_stub
     bucket_name = "test-bucket"
     test_text = "This is a long form text." * 200
-
-    # Mock response for start_speech_synthesis_task
     start_response = {
         'SynthesisTask': {
             'TaskId': 'test-task-id',
             'TaskStatus': 'inProgress',
-            'OutputUri': f"https://s3.us-east-1.amazonaws.com/{bucket_name}/path/to/output.mp3",
+            'OutputUri': (
+                f"https://s3.us-east-1.amazonaws.com/{bucket_name}"
+                "/path/to/output.mp3"
+            ),
             'RequestCharacters': len(test_text),
         }
     }
@@ -197,7 +207,10 @@ def test_long_form_tts_task_failure(polly_client_stub, s3_client_stub):
         'SynthesisTask': {
             'TaskId': 'test-task-id',
             'TaskStatus': 'failed',
-            'OutputUri': f"https://s3.us-east-1.amazonaws.com/{bucket_name}/path/to/output.mp3",
+            'OutputUri': (
+                f"https://s3.us-east-1.amazonaws.com/{bucket_name}"
+                "/path/to/output.mp3"
+            ),
             'RequestCharacters': len(test_text),
         }
     }
@@ -217,3 +230,107 @@ def test_long_form_tts_task_failure(polly_client_stub, s3_client_stub):
 
     with pytest.raises(RuntimeError, match="TTS task failed"):
         tts_client.convert_to_speech(test_text)
+
+
+# Test for create_tts_client function
+
+
+def test_create_tts_client_with_contents_only():
+    client = tts.create_tts_client(contents="Hello world", language='english')
+    assert isinstance(client, tts.TextToSpeech)
+    assert client.voice == 'Matthew'
+    assert client.engine == 'generative'
+    assert client.language_code == 'en-US'
+
+
+def test_create_tts_client_with_bucket():
+    client = tts.create_tts_client(
+        contents="Hello world", bucket="test-bucket", language='english'
+    )
+    assert isinstance(client, tts.LongFormTextToSpeech)
+    assert client.bucket == "test-bucket"
+    assert client.voice == 'Matthew'
+    assert client.engine == 'generative'
+    assert client.language_code == 'en-US'
+
+
+def test_create_tts_client_with_different_language():
+    client = tts.create_tts_client(contents="Bonjour", language='french')
+    assert isinstance(client, tts.TextToSpeech)
+    assert client.voice == 'Lea'
+    assert client.engine == 'generative'
+    assert client.language_code == 'fr-FR'
+
+
+def test_create_tts_client_invalid_language():
+    with pytest.raises(ValueError, match="Invalid language: invalid_lang"):
+        tts.create_tts_client(contents="Hello", language='invalid_lang')
+
+
+def test_create_tts_client_no_contents_or_filename():
+    with pytest.raises(
+        ValueError, match="Either contents or filename must be provided"
+    ):
+        tts.create_tts_client(language='english')
+
+
+def test_last_cost_calculation(polly_client_stub):
+    polly_client, stubber = polly_client_stub
+    test_text = "Hello" * 100  # 500 chars
+
+    expected_params = {
+        'Text': test_text,
+        'OutputFormat': 'mp3',
+        'VoiceId': 'Matthew',
+        'Engine': 'generative',
+        'LanguageCode': 'en-US',
+    }
+    mock_stream = BytesIO(b"fake audio data")
+    response = {
+        'RequestCharacters': 500,
+        'AudioStream': mock_stream,
+    }
+    stubber.add_response('synthesize_speech', response, expected_params)
+
+    tts_client = tts.TextToSpeech(polly_client=polly_client)
+    tts_client.convert_to_speech(test_text)
+
+    expected_cost = 30 * 500 / 1_000_000
+    assert tts_client.last_cost == expected_cost
+
+
+def test_last_cost_unknown_engine():
+    tts_client = tts.TextToSpeech()
+    tts_client.engine = 'unknown_engine'  # type: ignore
+    tts_client.last_request_chars = 1000
+    assert tts_client.last_cost == 0.0
+
+
+def test_text_to_speech_custom_params(polly_client_stub):
+    polly_client, stubber = polly_client_stub
+    test_text = "Hello world"
+
+    expected_params = {
+        'Text': test_text,
+        'OutputFormat': 'mp3',
+        'VoiceId': 'Joanna',
+        'Engine': 'long-form',
+        'LanguageCode': 'en-GB',
+    }
+    mock_stream = BytesIO(b"fake audio data")
+    response = {
+        'RequestCharacters': len(test_text),
+        'AudioStream': mock_stream,
+    }
+    stubber.add_response('synthesize_speech', response, expected_params)
+
+    tts_client = tts.TextToSpeech(
+        polly_client=polly_client,
+        voice='Joanna',
+        engine='long-form',
+        language_code='en-GB',
+    )
+    stream = tts_client.convert_to_speech(test_text)
+
+    assert stream.read() == b"fake audio data"
+    assert tts_client.last_request_chars == len(test_text)
