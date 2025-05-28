@@ -12,7 +12,9 @@ def tts(
     text: str = typer.Option(None, help="Text to convert to speech"),
     bucket: str = typer.Option(None, help="S3 bucket for long-form text"),
     output: str = typer.Option('output.mp3', help="Output audio file"),
-    language: str = typer.Option('en', help="Language of phrase"),
+    language: str = typer.Option('english', help="Language of phrase"),
+    voice: str = typer.Option(None, help="Voice to use for text-to-speech"),
+    engine: str = typer.Option(None, help="TTS engine (neural or generative)"),
 ):
     sys.excepthook = sys.__excepthook__
 
@@ -23,7 +25,12 @@ def tts(
         raise typer.Exit(code=1)
 
     tts = create_tts_client(
-        contents=text, filename=filename, bucket=bucket, language=language
+        contents=text,
+        filename=filename,
+        bucket=bucket,
+        language=language,
+        voice=voice,
+        engine=engine,
     )
     if filename is not None:
         with open(filename) as f:

@@ -32,6 +32,8 @@ def create_tts_client(
     filename: Optional[str] = None,
     bucket: Optional[str] = None,
     language: str = 'en',
+    voice: Optional[str] = None,
+    engine: Optional[str] = None,
 ) -> 'BaseTextToSpeech':
     if language not in LANGUAGES:
         raise ValueError(f"Invalid language: {language}")
@@ -39,6 +41,13 @@ def create_tts_client(
         raise ValueError("Either contents or filename must be provided")
     params = LANGUAGES[language]
     kwargs: dict[str, Any] = {**params}
+
+    # Override voice and engine if provided
+    if voice is not None:
+        kwargs['voice'] = voice
+    if engine is not None:
+        kwargs['engine'] = engine
+
     if bucket is not None:
         cls = LongFormTextToSpeech
         kwargs['bucket'] = bucket
