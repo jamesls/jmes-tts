@@ -28,20 +28,20 @@ dependencies = [
   "boto3-stubs[polly,s3]>=1.34.133,<2.0.0",
 ]
 
-[tool.uv]
-dev-dependencies = [
-  "pre-commit",
-  "pytest",
-  "pytest-cov",
-  "mkdocstrings",
-  "mkdocs-material",
-  "pymdown-extensions",
-  "pytest-github-actions-annotate-failures",
-  "jmeslog",
-  "poethepoet",
-  "ruff",
-  "pyright",
-  "pygments",
+[dependency-groups]
+dev = [
+  "ast-grep-cli",
+  "pytest>=8.4.2",
+  "pytest-cov>=7.0.0",
+  "mkdocstrings>=0.30.0",
+  "mkdocs-material>=9.6.20",
+  "pymdown-extensions>=10.16.1",
+  "pytest-github-actions-annotate-failures>=0.3.0",
+  "jmeslog>=0.2.0",
+  "poethepoet>=0.37.0",
+  "ruff>=0.13.0",
+  "pyright[nodejs]>=1.1.405",
+  "pygments>=2.19.2",
 ]
 
 [build-system]
@@ -54,6 +54,9 @@ packages = ["src/jaudible"]
 
 [tool.ruff]
 line-length = 79
+
+[tool.ruff.lint]
+extend-select = ["C901", "PLR0915", "E501", "SLF001"]
 
 [tool.ruff.format]
 quote-style = "preserve"
@@ -90,16 +93,18 @@ pythonPlatform = "All"
 
 [tool.poe.tasks]
 check = [
-{ cmd = "uv run ruff check ." },
-{ cmd = "uv run ruff format --diff ." },
-{ cmd = "uv run pyright" },
+  { cmd = "uv run ruff check ." },
+  { cmd = "uv run ruff format --diff ." },
+  { cmd = "uv run pyright" },
+  { cmd = "uv run ast-grep scan ." },
 ]
 test = "uv run pytest tests/"
 stage-release = "python3 ./scripts/stage-release --output staged-release.zip"
 auto-check = [
-  { cmd = "uv run ruff check --fix ." },
   { cmd = "uv run ruff format ." },
+  { cmd = "uv run ruff check --fix ." },
   { cmd = "uv run pyright" },
+  { cmd = "uv run ast-grep scan ." },
 ]
 format-code = [
   { cmd = "uv run ruff format ." },

@@ -1,17 +1,5 @@
 # jaudible
 
-[![PyPI](https://img.shields.io/pypi/v/jaudible?style=flat-square)](https://pypi.python.org/pypi/jaudible/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/jaudible?style=flat-square)](https://pypi.python.org/pypi/jaudible/)
-[![PyPI - License](https://img.shields.io/pypi/l/jaudible?style=flat-square)](https://pypi.python.org/pypi/jaudible/)
-
-
----
-
-**Source Code**: [https://github.com/jamesls/jaudible](https://github.com/jamesls/jaudible)
-**PyPI**: [https://pypi.org/project/jaudible/](https://pypi.org/project/jaudible/)
-
----
-
 Generate audio books from text documents
 
 ## Installation
@@ -22,24 +10,30 @@ pip install jaudible
 
 ## Development
 
-This project requires at Python 3.12 and uses
-[uv](https://docs.astral.sh/uv/) to manage dependencies.
+This project requires Python 3.12 and uses
+[uv](https://github.com/astral-sh/uv) to manage dependencies.
 
-Once you've created and activated your virtual environment, run:
+You can create a virtual environment with all the necessary dependencies
+by running:
 
 ```sh
-uv sync
+uv sync --all-extras --dev
 ```
 
 This will install all necessary dependencies and install this project
 in editable mode.
 
+You can activate the venv with:
+
+```sh
+. .venv/bin/activate
+```
 
 ### Testing
 
 [Poe the Poet](https://github.com/nat-n/poethepoet) is the task runner
 used for this project, it's automatically installed as part of the
-`poetry install` step.  To see a list of available tasks, run the
+dev dependencies.  To see a list of available tasks, run the
 `poe` command with no args.
 
 To run the tests for this project run:
