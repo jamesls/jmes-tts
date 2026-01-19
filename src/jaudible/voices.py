@@ -25,3 +25,7 @@ LANGUAGES = {
         'language_code': 'cmn-CN',
     },
 }
+
+
+def normalize_language(language: str) -> str:
+    return language.strip().lower()

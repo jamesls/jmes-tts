@@ -8,19 +8,35 @@ app = typer.Typer()
 
 @app.command()
 def tts(
-    filename: str = typer.Option(None, help="Input file to convert to speech"),
-    text: str = typer.Option(None, help="Text to convert to speech"),
-    bucket: str = typer.Option(None, help="S3 bucket for long-form text"),
+    filename: str | None = typer.Option(
+        None, help="Input file to convert to speech"
+    ),
+    text: str | None = typer.Option(None, help="Text to convert to speech"),
+    bucket: str | None = typer.Option(
+        None, help="S3 bucket for long-form text"
+    ),
     output: str = typer.Option('output.mp3', help="Output audio file"),
-    language: str = typer.Option('english', help="Language of phrase"),
-    voice: str = typer.Option(None, help="Voice to use for text-to-speech"),
-    engine: str = typer.Option(None, help="TTS engine (neural or generative)"),
+    language: str = typer.Option(
+        'english', help="Language of phrase (e.g. english, french)"
+    ),
+    voice: str | None = typer.Option(
+        None, help="Voice to use for text-to-speech"
+    ),
+    engine: str | None = typer.Option(
+        None, help="TTS engine (neural or generative)"
+    ),
 ):
     sys.excepthook = sys.__excepthook__
 
     if text is None and filename is None:
         typer.echo(
             "Error: Either --filename or --text must be provided", err=True
+        )
+        raise typer.Exit(code=1)
+    if text is not None and filename is not None:
+        typer.echo(
+            "Error: Provide either --filename or --text, but not both",
+            err=True,
         )
         raise typer.Exit(code=1)
 
@@ -32,10 +48,12 @@ def tts(
         voice=voice,
         engine=engine,
     )
+    contents: str
     if filename is not None:
         with open(filename) as f:
             contents = f.read()
     else:
+        assert text is not None
         contents = text
     stream = tts.convert_to_speech(contents)
     print(f"Num chars used: {tts.last_request_chars}")

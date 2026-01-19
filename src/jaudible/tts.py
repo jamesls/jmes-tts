@@ -2,6 +2,7 @@
 
 import time
 import logging
+from collections.abc import Callable
 from typing import Any, Optional
 
 import boto3
@@ -10,7 +11,7 @@ from mypy_boto3_polly.literals import VoiceIdType, EngineType, LanguageCodeType
 from mypy_boto3_polly.client import PollyClient
 from mypy_boto3_s3.client import S3Client
 
-from jaudible.voices import LANGUAGES
+from jaudible.voices import LANGUAGES, normalize_language
 from jaudible.pricing import PRICES
 
 
@@ -31,15 +32,20 @@ def create_tts_client(
     contents: Optional[str] = None,
     filename: Optional[str] = None,
     bucket: Optional[str] = None,
-    language: str = 'en',
+    language: str = 'english',
     voice: Optional[str] = None,
     engine: Optional[str] = None,
 ) -> 'BaseTextToSpeech':
-    if language not in LANGUAGES:
+    if (contents is None and filename is None) or (
+        contents is not None and filename is not None
+    ):
+        raise ValueError(
+            "Exactly one of contents or filename must be provided"
+        )
+    normalized_language = normalize_language(language)
+    if normalized_language not in LANGUAGES:
         raise ValueError(f"Invalid language: {language}")
-    if contents is None and filename is None:
-        raise ValueError("Either contents or filename must be provided")
-    params = LANGUAGES[language]
+    params = LANGUAGES[normalized_language]
     kwargs: dict[str, Any] = {**params}
 
     # Override voice and engine if provided
@@ -127,13 +133,17 @@ class LongFormTextToSpeech(BaseTextToSpeech):
         voice: VoiceIdType = 'Matthew',
         engine: EngineType = 'generative',
         language_code: LanguageCodeType = 'en-US',
+        sleep: Callable[[float], None] | None = None,
     ) -> None:
         if polly_client is None:
             polly_client = boto3.client('polly')
         if s3_client is None:
             s3_client = boto3.client('s3')
+        if sleep is None:
+            sleep = time.sleep
         self._polly = polly_client
         self._s3 = s3_client
+        self._sleep: Callable[[float], None] = sleep
         self.bucket = bucket
         self.voice: VoiceIdType = voice
         self.engine: EngineType = engine
@@ -169,7 +179,7 @@ class LongFormTextToSpeech(BaseTextToSpeech):
                     'RequestCharacters'
                 ]
                 return stream
-            time.sleep(self.DELAY)
+            self._sleep(self.DELAY)
 
     def _get_s3_download_stream(self, key: str):
         response = self._s3.get_object(Bucket=self.bucket, Key=key)

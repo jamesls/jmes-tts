@@ -68,10 +68,17 @@ This will convert the text "Hello, world!" to speech and save it as "hello.mp3".
 - `--text`: Text to convert to speech
 - `--bucket`: S3 bucket for long-form text (optional)
 - `--output`: Output audio file (default: output.mp3)
-- `--language`: Language of phrase (default: en)
+- `--language`: Language of phrase (default: english)
+- `--voice`: Voice to use for text-to-speech (optional)
+- `--engine`: TTS engine (optional)
 
-For languages you can specify `en` for English (the default), `fr` for French,
-and `es` for Spanish.
+Supported `--language` values:
+
+- `english` (default)
+- `french`
+- `spanish`
+- `cantonese`
+- `mandarin`
 
 ### Converting a File
 

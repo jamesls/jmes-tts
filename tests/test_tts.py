@@ -1,7 +1,9 @@
-import pytest
-import boto3
-from botocore.stub import Stubber
+from collections.abc import Callable
 from io import BytesIO
+
+import boto3
+import pytest
+from botocore.stub import Stubber
 
 from jaudible import tts
 
@@ -15,12 +17,12 @@ def mock_aws_credentials(monkeypatch):
     monkeypatch.setenv("AWS_REGION", "us-east-1")
 
 
-@pytest.fixture(autouse=True)
-def mock_sleep(monkeypatch):
-    def noop(*args, **kwargs):
-        pass
+@pytest.fixture
+def noop_sleep() -> Callable[[float], None]:
+    def noop(_: float) -> None:
+        return None
 
-    monkeypatch.setattr('time.sleep', noop)
+    return noop
 
 
 @pytest.fixture
@@ -81,7 +83,9 @@ def test_tts_convert_to_speech(polly_client_stub):
     assert tts_client.last_request_chars == len(test_text)
 
 
-def test_long_form_tts_convert_to_speech(polly_client_stub, s3_client_stub):
+def test_long_form_tts_convert_to_speech(
+    polly_client_stub, s3_client_stub, noop_sleep
+):
     polly_client, polly_stubber = polly_client_stub
     s3_client, s3_stubber = s3_client_stub
     bucket_name = "test-bucket"
@@ -166,6 +170,7 @@ def test_long_form_tts_convert_to_speech(polly_client_stub, s3_client_stub):
         bucket=bucket_name,
         polly_client=polly_client,
         s3_client=s3_client,
+        sleep=noop_sleep,
     )
 
     stream = tts_client.convert_to_speech(test_text)
@@ -174,7 +179,9 @@ def test_long_form_tts_convert_to_speech(polly_client_stub, s3_client_stub):
     assert tts_client.last_request_chars == len(test_text)
 
 
-def test_long_form_tts_task_failure(polly_client_stub, s3_client_stub):
+def test_long_form_tts_task_failure(
+    polly_client_stub, s3_client_stub, noop_sleep
+):
     polly_client, polly_stubber = polly_client_stub
     s3_client, _ = s3_client_stub
     bucket_name = "test-bucket"
@@ -226,6 +233,7 @@ def test_long_form_tts_task_failure(polly_client_stub, s3_client_stub):
         bucket=bucket_name,
         polly_client=polly_client,
         s3_client=s3_client,
+        sleep=noop_sleep,
     )
 
     with pytest.raises(RuntimeError, match="TTS task failed"):
@@ -236,7 +244,7 @@ def test_long_form_tts_task_failure(polly_client_stub, s3_client_stub):
 
 
 def test_create_tts_client_with_contents_only():
-    client = tts.create_tts_client(contents="Hello world", language='english')
+    client = tts.create_tts_client(contents="Hello world")
     assert isinstance(client, tts.TextToSpeech)
     assert client.voice == 'Matthew'
     assert client.engine == 'generative'
@@ -245,7 +253,7 @@ def test_create_tts_client_with_contents_only():
 
 def test_create_tts_client_with_bucket():
     client = tts.create_tts_client(
-        contents="Hello world", bucket="test-bucket", language='english'
+        contents="Hello world", bucket="test-bucket"
     )
     assert isinstance(client, tts.LongFormTextToSpeech)
     assert client.bucket == "test-bucket"
@@ -269,7 +277,8 @@ def test_create_tts_client_invalid_language():
 
 def test_create_tts_client_no_contents_or_filename():
     with pytest.raises(
-        ValueError, match="Either contents or filename must be provided"
+        ValueError,
+        match="Exactly one of contents or filename must be provided",
     ):
         tts.create_tts_client(language='english')
 
@@ -301,7 +310,7 @@ def test_last_cost_calculation(polly_client_stub):
 
 def test_last_cost_unknown_engine():
     tts_client = tts.TextToSpeech()
-    tts_client.engine = 'unknown_engine'  # type: ignore
+    tts_client.engine = 'unknown_engine'
     tts_client.last_request_chars = 1000
     assert tts_client.last_cost == 0.0
 
