@@ -96,6 +96,21 @@ def test_tts_convert_to_speech_over_limit_errors(polly_client_stub):
         tts_client.convert_to_speech(contents)
 
 
+def test_resolve_tts_params_overrides_voice_and_engine():
+    resolved = tts.resolve_tts_params(
+        " English ", voice="Joanna", engine="standard"
+    )
+    assert resolved["voice"] == "Joanna"
+    assert resolved["engine"] == "standard"
+    assert resolved["language_code"] == "en-US"
+
+
+def test_estimate_cost_unknown_engine_is_zero():
+    assert (
+        tts.estimate_cost(engine="unknown_engine", billable_chars=1000) == 0.0
+    )
+
+
 def test_tts_convert_to_speech(polly_client_stub):
     polly_client, stubber = polly_client_stub
     test_text = "Hello, this is a test."

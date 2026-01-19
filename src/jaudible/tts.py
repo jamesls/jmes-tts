@@ -50,6 +50,32 @@ def validate_max_chars(
     )
 
 
+def resolve_tts_params(
+    language: str,
+    *,
+    voice: Optional[str] = None,
+    engine: Optional[str] = None,
+) -> dict[str, Any]:
+    normalized_language = normalize_language(language)
+    if normalized_language not in LANGUAGES:
+        raise ValueError(f"Invalid language: {language}")
+    params = LANGUAGES[normalized_language]
+    kwargs: dict[str, Any] = {**params}
+
+    if voice is not None:
+        kwargs['voice'] = voice
+    if engine is not None:
+        kwargs['engine'] = engine
+
+    return kwargs
+
+
+def estimate_cost(*, engine: str, billable_chars: int) -> float:
+    if engine not in PRICES:
+        return 0.0
+    return PRICES[engine] * billable_chars / 1_000_000
+
+
 def create_tts_client(
     contents: Optional[str] = None,
     filename: Optional[str] = None,
@@ -64,17 +90,7 @@ def create_tts_client(
         raise ValueError(
             "Exactly one of contents or filename must be provided"
         )
-    normalized_language = normalize_language(language)
-    if normalized_language not in LANGUAGES:
-        raise ValueError(f"Invalid language: {language}")
-    params = LANGUAGES[normalized_language]
-    kwargs: dict[str, Any] = {**params}
-
-    # Override voice and engine if provided
-    if voice is not None:
-        kwargs['voice'] = voice
-    if engine is not None:
-        kwargs['engine'] = engine
+    kwargs = resolve_tts_params(language, voice=voice, engine=engine)
 
     if bucket is not None:
         cls = LongFormTextToSpeech

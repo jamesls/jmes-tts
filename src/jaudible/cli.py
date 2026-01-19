@@ -1,7 +1,14 @@
 import typer
 import sys
 
-from jaudible.tts import TextTooLongError, create_tts_client
+from jaudible.tts import (
+    TextTooLongError,
+    count_chars,
+    create_tts_client,
+    estimate_cost,
+    resolve_tts_params,
+    validate_max_chars,
+)
 
 app = typer.Typer()
 
@@ -25,6 +32,13 @@ def tts(
     engine: str | None = typer.Option(
         None, help="TTS engine (neural or generative)"
     ),
+    dry_run: bool = typer.Option(
+        False,
+        help=(
+            "Estimate cost and validate parameters without "
+            "making any AWS calls"
+        ),
+    ),
 ):
     sys.excepthook = sys.__excepthook__
 
@@ -40,6 +54,33 @@ def tts(
         )
         raise typer.Exit(code=1)
 
+    contents: str
+    if filename is not None:
+        with open(filename) as f:
+            contents = f.read()
+    else:
+        assert text is not None
+        contents = text
+
+    if dry_run:
+        try:
+            resolved = resolve_tts_params(language, voice=voice, engine=engine)
+            if bucket is None:
+                validate_max_chars(contents)
+        except TextTooLongError as exc:
+            typer.echo(f"Error: {exc}", err=True)
+            raise typer.Exit(code=1) from exc
+
+        billable_chars = count_chars(contents)
+        resolved_engine: str = resolved['engine']
+        estimated_cost = estimate_cost(
+            engine=resolved_engine, billable_chars=billable_chars
+        )
+        print(f"Num chars used: {billable_chars}")
+        print(f"Total cost: ${estimated_cost:.6f} USD")
+        print("Dry run: no AWS calls made.")
+        raise typer.Exit(code=0)
+
     tts = create_tts_client(
         contents=text,
         filename=filename,
@@ -48,13 +89,6 @@ def tts(
         voice=voice,
         engine=engine,
     )
-    contents: str
-    if filename is not None:
-        with open(filename) as f:
-            contents = f.read()
-    else:
-        assert text is not None
-        contents = text
     try:
         stream = tts.convert_to_speech(contents)
     except TextTooLongError as exc:
