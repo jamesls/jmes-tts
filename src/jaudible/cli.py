@@ -23,8 +23,11 @@ def tts(
         None, help="S3 bucket for long-form text"
     ),
     output: str = typer.Option('output.mp3', help="Output audio file"),
-    language: str = typer.Option(
-        'english', help="Language of phrase (e.g. english, french)"
+    language: str | None = typer.Option(
+        None, help="Language of phrase (e.g. english, french)"
+    ),
+    language_code: str | None = typer.Option(
+        None, help="Language code override (e.g. en-US, fr-FR)"
     ),
     voice: str | None = typer.Option(
         None, help="Voice to use for text-to-speech"
@@ -64,7 +67,12 @@ def tts(
 
     if dry_run:
         try:
-            resolved = resolve_tts_params(language, voice=voice, engine=engine)
+            resolved = resolve_tts_params(
+                language,
+                voice=voice,
+                engine=engine,
+                language_code=language_code,
+            )
             if bucket is None:
                 validate_max_chars(contents)
         except TextTooLongError as exc:
@@ -86,6 +94,7 @@ def tts(
         filename=filename,
         bucket=bucket,
         language=language,
+        language_code=language_code,
         voice=voice,
         engine=engine,
     )

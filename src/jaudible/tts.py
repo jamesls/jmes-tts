@@ -51,14 +51,17 @@ def validate_max_chars(
 
 
 def resolve_tts_params(
-    language: str,
+    language: Optional[str] = None,
     *,
     voice: Optional[str] = None,
     engine: Optional[str] = None,
+    language_code: Optional[str] = None,
 ) -> dict[str, Any]:
-    normalized_language = normalize_language(language)
+    # Use 'english' as default if no language specified
+    effective_language = language if language is not None else 'english'
+    normalized_language = normalize_language(effective_language)
     if normalized_language not in LANGUAGES:
-        raise ValueError(f"Invalid language: {language}")
+        raise ValueError(f"Invalid language: {effective_language}")
     params = LANGUAGES[normalized_language]
     kwargs: dict[str, Any] = {**params}
 
@@ -66,6 +69,8 @@ def resolve_tts_params(
         kwargs['voice'] = voice
     if engine is not None:
         kwargs['engine'] = engine
+    if language_code is not None:
+        kwargs['language_code'] = language_code
 
     return kwargs
 
@@ -80,7 +85,8 @@ def create_tts_client(
     contents: Optional[str] = None,
     filename: Optional[str] = None,
     bucket: Optional[str] = None,
-    language: str = 'english',
+    language: Optional[str] = None,
+    language_code: Optional[str] = None,
     voice: Optional[str] = None,
     engine: Optional[str] = None,
 ) -> 'BaseTextToSpeech':
@@ -90,7 +96,9 @@ def create_tts_client(
         raise ValueError(
             "Exactly one of contents or filename must be provided"
         )
-    kwargs = resolve_tts_params(language, voice=voice, engine=engine)
+    kwargs = resolve_tts_params(
+        language, voice=voice, engine=engine, language_code=language_code
+    )
 
     if bucket is not None:
         cls = LongFormTextToSpeech
