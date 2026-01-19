@@ -53,6 +53,21 @@ def s3_client_stub():
         ("", 0),
         ("A" * 100, 100),
         ("\n\t ", 0),
+        # Consecutive spaces collapsed to single space
+        ("Hello  World", 11),
+        ("Hello    World", 11),
+        # Tabs collapsed to single space
+        ("Hello\tWorld", 11),
+        ("Hello\t\tWorld", 11),
+        # Newlines collapsed to single space
+        ("Hello\nWorld", 11),
+        ("Hello\n\nWorld", 11),
+        # Mixed whitespace collapsed to single space
+        ("Hello \t\n World", 11),
+        ("One  Two   Three", 13),
+        # Leading/trailing whitespace with internal collapse
+        ("  Hello  World  ", 11),
+        ("\n\tHello\t\tWorld\n\t", 11),
     ],
 )
 def test_count_chars(input_text, expected_count):

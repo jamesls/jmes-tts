@@ -1,5 +1,6 @@
 """Performs text to speech using Amazon Polly."""
 
+import re
 import time
 import logging
 from collections.abc import Callable
@@ -18,14 +19,15 @@ from jaudible.pricing import PRICES
 LOG = logging.getLogger(__name__)
 
 
-def count_chars(contents: str):
+def count_chars(contents: str) -> int:
     """Count number of characters billed by Polly.
 
-    This is primarily to document what the actual calculation is more so
-    than the calculation being complicated.  It didn't match exactly, but this
-    was close enough.
+    Polly strips leading/trailing whitespace and collapses consecutive
+    whitespace characters into a single space.
     """
-    return len(contents.strip())
+    text = contents.strip()
+    text = re.sub(r'\s+', ' ', text)
+    return len(text)
 
 
 def create_tts_client(
