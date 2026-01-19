@@ -74,6 +74,28 @@ def test_count_chars(input_text, expected_count):
     assert tts.count_chars(input_text) == expected_count
 
 
+def test_validate_max_chars_uses_billable_chars():
+    contents = "A" + (" " * 4000) + "B"
+    tts.validate_max_chars(contents)
+
+
+def test_validate_max_chars_over_limit_raises_helpful_error():
+    contents = "A" * (tts.MAX_SYNC_BILLABLE_CHARS + 1)
+    with pytest.raises(
+        tts.TextTooLongError,
+        match=r"Text is 3001 billable characters.*max of 3000.*--bucket",
+    ):
+        tts.validate_max_chars(contents)
+
+
+def test_tts_convert_to_speech_over_limit_errors(polly_client_stub):
+    polly_client, _ = polly_client_stub
+    tts_client = tts.TextToSpeech(polly_client=polly_client)
+    contents = "A" * (tts.MAX_SYNC_BILLABLE_CHARS + 1)
+    with pytest.raises(tts.TextTooLongError, match=r"max of 3000"):
+        tts_client.convert_to_speech(contents)
+
+
 def test_tts_convert_to_speech(polly_client_stub):
     polly_client, stubber = polly_client_stub
     test_text = "Hello, this is a test."

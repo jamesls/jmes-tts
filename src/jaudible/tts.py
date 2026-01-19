@@ -18,6 +18,8 @@ from jaudible.pricing import PRICES
 
 LOG = logging.getLogger(__name__)
 
+MAX_SYNC_BILLABLE_CHARS = 3000
+
 
 def count_chars(contents: str) -> int:
     """Count number of characters billed by Polly.
@@ -28,6 +30,24 @@ def count_chars(contents: str) -> int:
     text = contents.strip()
     text = re.sub(r'\s+', ' ', text)
     return len(text)
+
+
+class TextTooLongError(ValueError):
+    pass
+
+
+def validate_max_chars(
+    contents: str, *, max_chars: int = MAX_SYNC_BILLABLE_CHARS
+) -> None:
+    billable_chars = count_chars(contents)
+    if billable_chars <= max_chars:
+        return
+
+    raise TextTooLongError(
+        f"Text is {billable_chars} billable characters, which exceeds the "
+        f"max of {max_chars} for synchronous TTS. Provide --bucket to use "
+        "long-form synthesis, or shorten your input."
+    )
 
 
 def create_tts_client(
@@ -98,6 +118,7 @@ class TextToSpeech(BaseTextToSpeech):
 
     def convert_to_speech(self, contents: str) -> StreamingBody:
         """Converts text to speech."""
+        validate_max_chars(contents)
         response = self._polly.synthesize_speech(
             Text=contents,
             OutputFormat='mp3',

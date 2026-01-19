@@ -1,7 +1,7 @@
 import typer
 import sys
 
-from jaudible.tts import create_tts_client
+from jaudible.tts import TextTooLongError, create_tts_client
 
 app = typer.Typer()
 
@@ -55,7 +55,11 @@ def tts(
     else:
         assert text is not None
         contents = text
-    stream = tts.convert_to_speech(contents)
+    try:
+        stream = tts.convert_to_speech(contents)
+    except TextTooLongError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
     print(f"Num chars used: {tts.last_request_chars}")
     print(f"Total cost: ${tts.last_cost:.6f} USD")
     with open(output, 'wb') as f:
