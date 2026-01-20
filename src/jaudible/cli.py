@@ -2,6 +2,7 @@ import typer
 import sys
 
 from jaudible.tts import (
+    InvalidLanguageError,
     TextTooLongError,
     count_chars,
     create_tts_client,
@@ -100,7 +101,7 @@ def tts(
             )
             if bucket is None:
                 validate_max_chars(contents)
-        except TextTooLongError as exc:
+        except (InvalidLanguageError, TextTooLongError) as exc:
             typer.echo(f"Error: {exc}", err=True)
             raise typer.Exit(code=1) from exc
 
@@ -114,15 +115,19 @@ def tts(
         print("Dry run: no AWS calls made.")
         raise typer.Exit(code=0)
 
-    tts = create_tts_client(
-        contents=text,
-        filename=filename,
-        bucket=bucket,
-        language=language,
-        language_code=language_code,
-        voice=voice,
-        engine=engine,
-    )
+    try:
+        tts = create_tts_client(
+            contents=text,
+            filename=filename,
+            bucket=bucket,
+            language=language,
+            language_code=language_code,
+            voice=voice,
+            engine=engine,
+        )
+    except InvalidLanguageError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
     try:
         stream = tts.convert_to_speech(contents)
     except TextTooLongError as exc:

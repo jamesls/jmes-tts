@@ -41,6 +41,23 @@ class TextTooLongError(ValueError):
     pass
 
 
+class InvalidLanguageError(ValueError):
+    language: str
+    valid_languages: tuple[str, ...]
+
+    def __init__(
+        self, language: str, *, valid_languages: tuple[str, ...]
+    ) -> None:
+        self.language = language
+        self.valid_languages = valid_languages
+        valid_languages_str = ', '.join(valid_languages)
+        super().__init__(
+            f"Invalid language: {language}. "
+            f"Valid languages: {valid_languages_str}. "
+            "Run --list-languages to see presets and Polly codes."
+        )
+
+
 def validate_max_chars(
     contents: str, *, max_chars: int = MAX_SYNC_BILLABLE_CHARS
 ) -> None:
@@ -66,7 +83,10 @@ def resolve_tts_params(
     effective_language = language if language is not None else 'english'
     normalized_language = normalize_language(effective_language)
     if normalized_language not in LANGUAGES:
-        raise ValueError(f"Invalid language: {effective_language}")
+        valid_languages = tuple(sorted(LANGUAGES))
+        raise InvalidLanguageError(
+            effective_language, valid_languages=valid_languages
+        )
     params = LANGUAGES[normalized_language]
     kwargs: dict[str, Any] = {**params}
 
