@@ -6,11 +6,27 @@ from jaudible.tts import (
     count_chars,
     create_tts_client,
     estimate_cost,
+    list_polly_language_codes,
     resolve_tts_params,
     validate_max_chars,
 )
+from jaudible.voices import LANGUAGES
 
 app = typer.Typer()
+
+
+def _print_languages() -> None:
+    typer.echo('Language presets (--language):')
+    for name in sorted(LANGUAGES):
+        preset = LANGUAGES[name]
+        typer.echo(
+            f'- {name}: voice={preset["voice"]} engine={preset["engine"]} '
+            f'language_code={preset["language_code"]}'
+        )
+    typer.echo()
+    typer.echo('Polly language codes (--language-code):')
+    for code in list_polly_language_codes():
+        typer.echo(f'- {code}')
 
 
 @app.command()
@@ -35,6 +51,11 @@ def tts(
     engine: str | None = typer.Option(
         None, help="TTS engine (neural or generative)"
     ),
+    list_languages: bool = typer.Option(
+        False,
+        '--list-languages',
+        help=('List language presets and Polly language codes, then exit'),
+    ),
     dry_run: bool = typer.Option(
         False,
         help=(
@@ -42,8 +63,12 @@ def tts(
             "making any AWS calls"
         ),
     ),
-):
+) -> None:
     sys.excepthook = sys.__excepthook__
+
+    if list_languages:
+        _print_languages()
+        raise typer.Exit(code=0)
 
     if text is None and filename is None:
         typer.echo(

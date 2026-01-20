@@ -69,8 +69,10 @@ This will convert the text "Hello, world!" to speech and save it as "hello.mp3".
 - `--bucket`: S3 bucket for long-form text (optional)
 - `--output`: Output audio file (default: output.mp3)
 - `--language`: Language of phrase (default: english)
+- `--language-code`: Language code override (optional)
 - `--voice`: Voice to use for text-to-speech (optional)
 - `--engine`: TTS engine (optional)
+- `--list-languages`: List language presets and Polly language codes
 
 Supported `--language` values:
 
@@ -79,6 +81,9 @@ Supported `--language` values:
 - `spanish`
 - `cantonese`
 - `mandarin`
+
+Run `jmes-tts --list-languages` to see all presets and the full list of
+supported language codes.
 
 ### Converting a File
 

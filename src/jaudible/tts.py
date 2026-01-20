@@ -4,7 +4,7 @@ import re
 import time
 import logging
 from collections.abc import Callable
-from typing import Any, Optional
+from typing import Any, Optional, get_args
 
 import boto3
 from botocore.response import StreamingBody
@@ -19,6 +19,11 @@ from jaudible.pricing import PRICES
 LOG = logging.getLogger(__name__)
 
 MAX_SYNC_BILLABLE_CHARS = 3000
+
+
+def list_polly_language_codes() -> tuple[str, ...]:
+    codes = (str(code) for code in get_args(LanguageCodeType))
+    return tuple(sorted(set(codes)))
 
 
 def count_chars(contents: str) -> int:
