@@ -1,7 +1,7 @@
 [project]
-name = "jaudible"
+name = "jmes-tts"
 version = "0.0.1"
-description = "Generate audio books from text documents"
+description = "Generate audio from text documents"
 authors = [
     { name="James Saryerwinnie", email="js@jamesls.com" }
 ]
@@ -49,7 +49,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/jaudible"]
+packages = ["src/jmestts"]
 
 
 [tool.ruff]
@@ -64,7 +64,7 @@ preview = true
 
 [tool.pytest.ini_options]
 addopts = """\
-    --cov jaudible \
+    --cov jmestts \
     --cov-report term-missing \
     --no-cov-on-fail \
 """
@@ -113,4 +113,4 @@ prcheck = ["check", "test"]
 
 # Create a jmes-tts CLI command
 [project.scripts]
-jmes-tts = "jaudible.cli:app"
+jmes-tts = "jmestts.cli:app"

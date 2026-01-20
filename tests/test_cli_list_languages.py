@@ -1,8 +1,8 @@
 from typer.testing import CliRunner
 
-import jaudible.cli as cli
-from jaudible.tts import list_polly_language_codes
-from jaudible.voices import LANGUAGES
+import jmestts.cli as cli
+from jmestts.tts import list_polly_language_codes
+from jmestts.voices import LANGUAGES
 
 
 def test_list_languages_prints_presets_and_polly_codes() -> None:

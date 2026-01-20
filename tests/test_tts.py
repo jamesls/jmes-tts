@@ -5,7 +5,7 @@ import boto3
 import pytest
 from botocore.stub import Stubber
 
-from jaudible import tts
+from jmestts import tts
 
 
 @pytest.fixture(autouse=True)

@@ -1,11 +1,11 @@
-# jaudible
+# jmes-tts
 
 Generate audio books from text documents
 
 ## Installation
 
 ```sh
-pip install jaudible
+pip install jmes-tts
 ```
 
 ## Development

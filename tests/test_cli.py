@@ -2,8 +2,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-import jaudible.cli as cli
-from jaudible.pricing import PRICES
+import jmestts.cli as cli
+from jmestts.pricing import PRICES
 
 
 def _deny_aws_calls(*_args: object, **_kwargs: object) -> object:

@@ -4,9 +4,9 @@
   "checkout": null,
   "context": {
     "cookiecutter": {
-      "project_name": "jaudible",
-      "project_slug": "jaudible",
-      "package_name": "jaudible",
+      "project_name": "jmes-tts",
+      "project_slug": "jmes-tts",
+      "package_name": "jmestts",
       "project_short_description": "Generate audio books from text documents",
       "year": "2024",
       "version": "0.0.1",

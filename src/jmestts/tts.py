@@ -12,8 +12,8 @@ from mypy_boto3_polly.literals import VoiceIdType, EngineType, LanguageCodeType
 from mypy_boto3_polly.client import PollyClient
 from mypy_boto3_s3.client import S3Client
 
-from jaudible.voices import LANGUAGES, normalize_language
-from jaudible.pricing import PRICES
+from jmestts.voices import LANGUAGES, normalize_language
+from jmestts.pricing import PRICES
 
 
 LOG = logging.getLogger(__name__)

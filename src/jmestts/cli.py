@@ -1,7 +1,7 @@
 import typer
 import sys
 
-from jaudible.tts import (
+from jmestts.tts import (
     InvalidLanguageError,
     TextTooLongError,
     count_chars,
@@ -11,7 +11,7 @@ from jaudible.tts import (
     resolve_tts_params,
     validate_max_chars,
 )
-from jaudible.voices import LANGUAGES
+from jmestts.voices import LANGUAGES
 
 app = typer.Typer()
 

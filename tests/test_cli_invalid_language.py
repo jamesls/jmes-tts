@@ -1,7 +1,7 @@
 from typer.testing import CliRunner
 
-import jaudible.cli as cli
-from jaudible.voices import LANGUAGES
+import jmestts.cli as cli
+from jmestts.voices import LANGUAGES
 
 
 def test_unknown_language_lists_valid_languages() -> None:
