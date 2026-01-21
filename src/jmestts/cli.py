@@ -1,5 +1,7 @@
-import typer
 import sys
+from importlib.metadata import version
+
+import typer
 
 from jmestts.tts import (
     InvalidLanguageError,
@@ -14,6 +16,12 @@ from jmestts.tts import (
 from jmestts.voices import LANGUAGES
 
 app = typer.Typer()
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"jmes-tts {version('jmes-tts')}")
+        raise typer.Exit()
 
 
 def _print_languages() -> None:
@@ -63,6 +71,13 @@ def tts(
             "Estimate cost and validate parameters without "
             "making any AWS calls"
         ),
+    ),
+    version: bool | None = typer.Option(
+        None,
+        "--version",
+        callback=_version_callback,
+        is_eager=True,
+        help="Show version and exit",
     ),
 ) -> None:
     sys.excepthook = sys.__excepthook__
