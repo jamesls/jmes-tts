@@ -1,6 +1,6 @@
 [project]
 name = "jmes-tts"
-version = "0.0.1"
+version = "0.0.2"
 description = "Generate audio from text documents"
 authors = [
     { name="James Saryerwinnie", email="js@jamesls.com" }
